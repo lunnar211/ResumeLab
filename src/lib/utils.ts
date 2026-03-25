@@ -11,7 +11,7 @@ export function generateSlug(title: string): string {
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .trim() + '-' + Math.random().toString(36).substr(2, 6)
+    .trim() + '-' + Math.random().toString(36).substring(2, 8)
 }
 
 export function formatDate(dateString: string, locale = 'en-US'): string {
