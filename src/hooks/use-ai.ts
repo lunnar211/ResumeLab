@@ -43,8 +43,10 @@ export function useAI() {
               const parsed = JSON.parse(data)
               const content = parsed.choices?.[0]?.delta?.content
               if (content) result += content
-            } catch {
-              // skip malformed lines
+            } catch (parseErr) {
+              if (process.env.NODE_ENV === "development") {
+                console.debug("Skipping malformed SSE line:", data, parseErr)
+              }
             }
           }
         }

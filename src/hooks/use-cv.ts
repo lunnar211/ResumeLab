@@ -85,10 +85,13 @@ export function useCV(cvId: string, initialContent: CVContent = defaultCVContent
 
   const save = useCallback(
     async (content: CVContent) => {
-      await supabase
+      const { error } = await supabase
         .from("cvs")
         .update({ content, updated_at: new Date().toISOString() })
         .eq("id", cvId)
+      if (error) {
+        console.error("Failed to save CV:", error.message)
+      }
     },
     [cvId, supabase]
   )

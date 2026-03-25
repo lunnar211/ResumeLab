@@ -85,8 +85,7 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
       return
     }
     triggerSave(state)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state])
+  }, [state, triggerSave])
 
   const updateTitle = async (newTitle: string) => {
     setTitle(newTitle)
