@@ -14,7 +14,7 @@ const features: { Icon: FeatureIcon; title: string; description: string }[] = [
   { Icon: Brain as FeatureIcon, title: "AI-Powered", description: "Smart content suggestions to make your CV stand out" },
   { Icon: CheckCircle as FeatureIcon, title: "ATS-Optimized", description: "Pass ATS scanners and reach human recruiters" },
   { Icon: Layout as FeatureIcon, title: "10+ Templates", description: "Professional designs for every industry and role" },
-  { Icon: Mic as FeatureIcon, title: "Voice Assistant", description: "Dictate your experience hands-free" },
+  { Icon: Mic as FeatureIcon, title: "Voice Assistant", description: "Dictate your experience hands-free (Pro — coming soon)" },
   { Icon: Download as FeatureIcon, title: "Export PDF/DOCX", description: "Download in multiple formats instantly" },
   { Icon: Eye as FeatureIcon, title: "Real-time Preview", description: "See every change reflected instantly" },
 ]

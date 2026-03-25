@@ -1,12 +1,17 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useCallback, useRef, memo } from "react"
 import { ArrowLeft, Eye, Edit, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import type { CVContent } from "@/types/cv"
 import { useCV } from "@/hooks/use-cv"
-import { getTemplateComponent } from "@/components/cv-templates"
+import {
+  ClassicProfessional,
+  ModernMinimal,
+  ATSOptimized,
+  ExecutiveBlue,
+  TechnicalDeveloper,
+} from "@/components/cv-templates"
 import { templates } from "@/lib/templates"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -54,8 +59,37 @@ const sectionLabels: Record<string, string> = {
   customSections: "Custom",
 }
 
+// Defined at module scope with a switch statement to avoid dynamic component lookup during render
+const CVTemplateRenderer = memo(function CVTemplateRenderer({
+  templateId,
+  content,
+}: {
+  templateId: string
+  content: CVContent
+}) {
+  switch (templateId) {
+    case "classic-professional":
+    case "academic-scholar":
+    case "international-global":
+      return <ClassicProfessional content={content} />
+    case "modern-minimal":
+    case "creative-colorful":
+    case "student-entry":
+      return <ModernMinimal content={content} />
+    case "ats-optimized":
+    case "europass-eu":
+      return <ATSOptimized content={content} />
+    case "executive-blue":
+      return <ExecutiveBlue content={content} />
+    case "technical-developer":
+      return <TechnicalDeveloper content={content} />
+    default:
+      return <ClassicProfessional content={content} />
+  }
+})
+CVTemplateRenderer.displayName = "CVTemplateRenderer"
+
 export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTemplateId, isPublic: initialIsPublic }: Props) {
-  const router = useRouter()
   const supabase = createClient()
   const { state, dispatch, debouncedSave } = useCV(cvId, initialContent)
 
@@ -67,11 +101,8 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit")
   const mountedRef = useRef(false)
 
-  const TemplateComponent = getTemplateComponent(templateId)
-
   const triggerSave = useCallback(
     (content: CVContent) => {
-      setSaveStatus("saving")
       debouncedSave(content)
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = setTimeout(() => setSaveStatus("saved"), 2500)
@@ -84,7 +115,12 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
       mountedRef.current = true
       return
     }
-    triggerSave(state)
+    // Schedule save and update status after current render cycle
+    const handle = setTimeout(() => {
+      setSaveStatus("saving")
+      triggerSave(state)
+    }, 0)
+    return () => clearTimeout(handle)
   }, [state, triggerSave])
 
   const updateTitle = async (newTitle: string) => {
@@ -275,7 +311,7 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
           <div className="h-full overflow-y-auto">
             <div className="min-h-full p-4">
               <div id="cv-preview" className="mx-auto max-w-[794px] shadow-md">
-                <TemplateComponent content={state} />
+                <CVTemplateRenderer templateId={templateId} content={state} />
               </div>
             </div>
           </div>

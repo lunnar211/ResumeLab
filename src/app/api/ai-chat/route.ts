@@ -64,16 +64,25 @@ export async function POST(request: NextRequest) {
     )
     if (!response.ok) throw new Error("Groq failed")
   } catch {
-    response = await makeRequest(
-      "https://openrouter.ai/api/v1/chat/completions",
-      process.env.OPENROUTER_API_KEY!,
-      "meta-llama/llama-3.3-70b-instruct"
-    )
+    try {
+      response = await makeRequest(
+        "https://openrouter.ai/api/v1/chat/completions",
+        process.env.OPENROUTER_API_KEY!,
+        "meta-llama/llama-3.3-70b-instruct"
+      )
+    } catch {
+      return NextResponse.json({ error: "AI service unavailable. Please try again later." }, { status: 503 })
+    }
   }
 
-  await supabase.from("usage_logs").insert({ user_id: user.id, feature, tokens_used: 0 })
+  if (!response || !response.ok || !response.body) {
+    return NextResponse.json({ error: "AI service returned an invalid response." }, { status: 502 })
+  }
 
-  return new NextResponse(response!.body, {
+  // Log usage asynchronously (best-effort, non-blocking)
+  supabase.from("usage_logs").insert({ user_id: user.id, feature, tokens_used: 1 }).then(() => {})
+
+  return new NextResponse(response.body, {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
