@@ -24,7 +24,10 @@ export async function signUpWithEmail(email: string, password: string, fullName:
 
 export async function signInWithGoogle(): Promise<{ url: string } | { error: string }> {
   const supabase = await createClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://resumelab-d6gn.onrender.com"
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
