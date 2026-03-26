@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { SignOutButton } from "@/components/sign-out-button"
+import { FloatingVoiceAssistant } from "@/components/FloatingVoiceAssistant"
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -68,6 +69,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      <FloatingVoiceAssistant />
     </div>
   )
 }

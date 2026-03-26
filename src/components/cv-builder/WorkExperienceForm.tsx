@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 function newEntry(): WorkExperience {
   return {
@@ -30,6 +31,7 @@ interface Props {
 export function WorkExperienceForm({ value, onChange }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(value[0]?.id ?? null)
   const [improvingId, setImprovingId] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const update = (id: string, data: Partial<WorkExperience>) => {
     onChange(value.map((e) => (e.id === id ? { ...e, ...data } : e)))
@@ -67,9 +69,10 @@ export function WorkExperienceForm({ value, onChange }: Props) {
       if (data.result) {
         const improved = (data.result as string).split("\n").filter((b: string) => b.trim())
         update(exp.id, { bullets: improved })
+        toast({ title: "Bullets improved!", description: "AI has enhanced your bullet points." })
       }
     } catch {
-      // silently fail; user can retry
+      toast({ title: "AI failed", description: "Could not improve bullets. Please try again.", variant: "destructive" })
     } finally {
       setImprovingId(null)
     }
@@ -131,6 +134,7 @@ export function WorkExperienceForm({ value, onChange }: Props) {
                   rows={2}
                   placeholder="Brief role description..."
                 />
+                <p className="text-[11px] text-muted-foreground text-right">{exp.description.length} chars</p>
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <div className="flex items-center justify-between">
