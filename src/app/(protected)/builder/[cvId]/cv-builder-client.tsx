@@ -34,6 +34,24 @@ import { CustomSectionForm } from "@/components/cv-builder/CustomSectionForm"
 import { SectionReorder } from "@/components/cv-builder/SectionReorder"
 import { ExportMenu } from "@/components/cv-builder/ExportMenu"
 
+function calcCompletion(c: CVContent): number {
+  let score = 0
+  if (c.personalInfo.fullName) score += 10
+  if (c.personalInfo.email) score += 10
+  if (c.personalInfo.professionalTitle) score += 5
+  if (c.personalInfo.summary) score += 15
+  if (c.workExperience.length > 0) score += 20
+  if (c.education.length > 0) score += 15
+  if (c.skills.length >= 2) score += 15
+  if (
+    c.languages.length > 0 ||
+    c.certifications.length > 0 ||
+    c.projects.length > 0 ||
+    c.awards.length > 0
+  ) score += 10
+  return Math.min(score, 100)
+}
+
 interface Props {
   cvId: string
   initialTitle: string
@@ -206,6 +224,24 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* CV completion progress bar */}
+          <div className="shrink-0 border-b px-3 py-2">
+            {(() => {
+              const pct = calcCompletion(state)
+              return (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-full bg-muted h-1.5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground shrink-0 w-10 text-right">{pct}%</span>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Form sections */}
