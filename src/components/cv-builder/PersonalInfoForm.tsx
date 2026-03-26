@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
+import { Sparkles, Loader2 } from "lucide-react"
 import type { PersonalInfo } from "@/types/cv"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
 import { VoiceAssistant } from "@/components/VoiceAssistant"
+import { useToast } from "@/hooks/use-toast"
 
 interface Props {
   value: PersonalInfo
@@ -15,6 +18,8 @@ interface Props {
 
 export function PersonalInfoForm({ value, onChange }: Props) {
   const { register, watch, setValue } = useForm<PersonalInfo>({ defaultValues: value })
+  const [generatingSummary, setGeneratingSummary] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const sub = watch((data) => onChange(data as PersonalInfo))
@@ -37,6 +42,32 @@ export function PersonalInfoForm({ value, onChange }: Props) {
       if (val !== null && val !== undefined && val !== "") {
         setValue(formKey, val as string, { shouldDirty: true })
       }
+    }
+  }
+
+  const generateSummary = async () => {
+    const current = watch()
+    const fullName = current.fullName || "the candidate"
+    const professionalTitle = current.professionalTitle || "professional"
+    const prompt = `Write a professional summary for ${fullName}, a ${professionalTitle}. 2-3 sentences. Professional, concise, impactful.`
+    setGeneratingSummary(true)
+    try {
+      const res = await fetch("/api/ai/generate-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
+      const data = await res.json()
+      if (data.result) {
+        setValue("summary", data.result as string, { shouldDirty: true })
+        toast({ title: "Summary generated!", description: "AI has written your professional summary." })
+      } else {
+        toast({ title: "AI failed", description: "Could not generate summary. Please try again.", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "AI failed", description: "Could not generate summary. Please try again.", variant: "destructive" })
+    } finally {
+      setGeneratingSummary(false)
     }
   }
 
@@ -69,7 +100,24 @@ export function PersonalInfoForm({ value, onChange }: Props) {
         ))}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="summary">Professional Summary</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="summary">Professional Summary</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-6 gap-1 px-2 text-[11px]"
+            disabled={generatingSummary}
+            onClick={generateSummary}
+          >
+            {generatingSummary ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            AI Generate
+          </Button>
+        </div>
         <Textarea
           id="summary"
           rows={4}

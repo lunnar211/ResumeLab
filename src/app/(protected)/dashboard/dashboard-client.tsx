@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { defaultCVContent } from "@/types/cv"
 import type { CVFormat } from "@/types/cv"
 import { templates } from "@/lib/templates"
-import { generateSlug } from "@/lib/utils"
+import { generateSlug, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -175,18 +175,32 @@ export function DashboardClient({ cvs: initialCVs, usageCount, plan, userId }: P
                   </SelectContent>
                 </Select>
               </div>
+              {/* Template selector */}
               <div className="flex flex-col gap-1.5">
                 <Label>Template</Label>
-                <Select value={newTemplate} onValueChange={setNewTemplate}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {templates.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setNewTemplate(t.id)}
+                      className={cn(
+                        "flex shrink-0 flex-col items-center gap-1 rounded-lg border-2 p-2 text-xs transition-all",
+                        newTemplate === t.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex h-12 w-9 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+                        <span className="text-[8px] font-bold leading-tight text-center">{t.name.slice(0, 4).toUpperCase()}</span>
+                      </div>
+                      <span className="max-w-[64px] truncate text-center font-medium">{t.name}</span>
+                      {t.isPremium && (
+                        <span className="rounded bg-amber-100 px-1 py-0 text-[9px] font-semibold text-amber-700">Pro</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
               <Button onClick={createCV} disabled={creating || !newTitle.trim()}>
                 {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
