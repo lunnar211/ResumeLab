@@ -124,6 +124,14 @@ export function PersonalInfoForm({ value, onChange }: Props) {
           placeholder="Write a brief professional summary..."
           {...register("summary")}
         />
+        <p className="text-[11px] text-muted-foreground text-right">
+          {(watch("summary") ?? "").length} chars
+          {(watch("summary") ?? "").length > 0 && (watch("summary") ?? "").length < 100
+            ? " · too short"
+            : (watch("summary") ?? "").length > 600
+            ? " · too long"
+            : ""}
+        </p>
       </div>
     </div>
   )

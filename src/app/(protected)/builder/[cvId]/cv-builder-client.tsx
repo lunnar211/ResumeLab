@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef, memo } from "react"
-import { ArrowLeft, Eye, Edit, Check, Loader2 } from "lucide-react"
+import { ArrowLeft, Eye, Edit, Check, Loader2, User, Briefcase, GraduationCap, Star, Globe, Award, FolderOpen, BookOpen, Heart, Users, FileText as FileTextIcon, LayoutGrid } from "lucide-react"
 import Link from "next/link"
 import type { CVContent } from "@/types/cv"
 import { useCV } from "@/hooks/use-cv"
@@ -77,6 +77,44 @@ const sectionLabels: Record<string, string> = {
   customSections: "Custom",
 }
 
+// Section icons for sidebar
+const sectionIcons: Record<string, React.ElementType> = {
+  personalInfo: User,
+  workExperience: Briefcase,
+  education: GraduationCap,
+  skills: Star,
+  languages: Globe,
+  certifications: Award,
+  projects: FolderOpen,
+  publications: BookOpen,
+  awards: Award,
+  volunteerWork: Heart,
+  references: Users,
+  customSections: LayoutGrid,
+}
+
+// Check if a section has required data filled
+function isSectionComplete(key: string, c: CVContent): boolean {
+  switch (key) {
+    case "personalInfo": return !!(c.personalInfo.fullName && c.personalInfo.email)
+    case "workExperience": return c.workExperience.length > 0
+    case "education": return c.education.length > 0
+    case "skills": return c.skills.length >= 2
+    case "languages": return c.languages.length > 0
+    case "certifications": return c.certifications.length > 0
+    case "projects": return c.projects.length > 0
+    case "publications": return c.publications.length > 0
+    case "awards": return c.awards.length > 0
+    case "volunteerWork": return c.volunteerWork.length > 0
+    case "references": return c.references.length > 0
+    case "customSections": return c.customSections.length > 0
+    default: return false
+  }
+}
+
+// Sections that are "required" (show red dot when empty)
+const requiredSections = new Set(["personalInfo", "workExperience", "education", "skills"])
+
 // Defined at module scope with a switch statement to avoid dynamic component lookup during render
 const CVTemplateRenderer = memo(function CVTemplateRenderer({
   templateId,
@@ -118,6 +156,9 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">("idle")
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit")
   const mountedRef = useRef(false)
+  // Refs for scrolling to each section
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [activeSection, setActiveSection] = useState("personalInfo")
 
   const triggerSave = useCallback(
     (content: CVContent) => {
@@ -133,7 +174,6 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
       mountedRef.current = true
       return
     }
-    // Schedule save and update status after current render cycle
     const handle = setTimeout(() => {
       setSaveStatus("saving")
       triggerSave(state)
@@ -156,6 +196,21 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
     setIsPublic(next)
     await supabase.from("cvs").update({ is_public: next }).eq("id", cvId)
   }
+
+  const scrollToSection = (key: string) => {
+    setActiveSection(key)
+    const el = sectionRefs.current[key]
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
+
+  // Sidebar section list (always visible)
+  const sidebarSections = [
+    "personalInfo", "workExperience", "education", "skills",
+    "languages", "certifications", "projects", "publications",
+    "awards", "volunteerWork", "references", "customSections",
+  ]
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -201,8 +256,37 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
+        {/* Desktop section navigation sidebar */}
+        <div className="hidden lg:flex w-[140px] shrink-0 flex-col border-r bg-muted/20 overflow-y-auto py-2">
+          {sidebarSections.map((key) => {
+            const Icon = sectionIcons[key] ?? FileTextIcon
+            const complete = isSectionComplete(key, state)
+            const required = requiredSections.has(key)
+            const isActive = activeSection === key
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => scrollToSection(key)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted",
+                  isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 truncate leading-tight">{sectionLabels[key]}</span>
+                {complete ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                ) : required ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+
         {/* Left panel - Forms */}
-        <div className={cn("w-full md:w-[42%] flex flex-col overflow-hidden border-r", mobileTab === "preview" && "hidden md:flex")}>
+        <div className={cn("flex-1 lg:w-auto md:w-[42%] flex flex-col overflow-hidden border-r", mobileTab === "preview" && "hidden md:flex")}>
           {/* Template switcher */}
           <div className="shrink-0 border-b p-2">
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -238,7 +322,7 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[11px] text-muted-foreground shrink-0 w-10 text-right">{pct}%</span>
+                  <span className="text-[11px] text-muted-foreground shrink-0 w-10 text-right">{pct}% complete</span>
                 </div>
               )
             })()}
@@ -246,91 +330,115 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
 
           {/* Form sections */}
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-            <CVFormSection title="Personal Info" defaultOpen>
-              <PersonalInfoForm
-                value={state.personalInfo}
-                onChange={(val) => dispatch({ type: "UPDATE_PERSONAL_INFO", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["personalInfo"] = el }}>
+              <CVFormSection title="Personal Info" defaultOpen>
+                <PersonalInfoForm
+                  value={state.personalInfo}
+                  onChange={(val) => dispatch({ type: "UPDATE_PERSONAL_INFO", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Work Experience">
-              <WorkExperienceForm
-                value={state.workExperience}
-                onChange={(val) => dispatch({ type: "SET_CV", payload: { workExperience: val } })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["workExperience"] = el }}>
+              <CVFormSection title="Work Experience">
+                <WorkExperienceForm
+                  value={state.workExperience}
+                  onChange={(val) => dispatch({ type: "SET_CV", payload: { workExperience: val } })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Education">
-              <EducationForm
-                value={state.education}
-                onChange={(val) => dispatch({ type: "SET_CV", payload: { education: val } })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["education"] = el }}>
+              <CVFormSection title="Education">
+                <EducationForm
+                  value={state.education}
+                  onChange={(val) => dispatch({ type: "SET_CV", payload: { education: val } })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Skills">
-              <SkillsForm
-                value={state.skills}
-                onChange={(val) => dispatch({ type: "SET_SKILLS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["skills"] = el }}>
+              <CVFormSection title="Skills">
+                <SkillsForm
+                  value={state.skills}
+                  onChange={(val) => dispatch({ type: "SET_SKILLS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Languages">
-              <LanguagesForm
-                value={state.languages}
-                onChange={(val) => dispatch({ type: "SET_LANGUAGES", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["languages"] = el }}>
+              <CVFormSection title="Languages">
+                <LanguagesForm
+                  value={state.languages}
+                  onChange={(val) => dispatch({ type: "SET_LANGUAGES", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Certifications">
-              <CertificationsForm
-                value={state.certifications}
-                onChange={(val) => dispatch({ type: "SET_CERTIFICATIONS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["certifications"] = el }}>
+              <CVFormSection title="Certifications">
+                <CertificationsForm
+                  value={state.certifications}
+                  onChange={(val) => dispatch({ type: "SET_CERTIFICATIONS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Projects">
-              <ProjectsForm
-                value={state.projects}
-                onChange={(val) => dispatch({ type: "SET_PROJECTS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["projects"] = el }}>
+              <CVFormSection title="Projects">
+                <ProjectsForm
+                  value={state.projects}
+                  onChange={(val) => dispatch({ type: "SET_PROJECTS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Publications">
-              <PublicationsForm
-                value={state.publications}
-                onChange={(val) => dispatch({ type: "SET_PUBLICATIONS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["publications"] = el }}>
+              <CVFormSection title="Publications">
+                <PublicationsForm
+                  value={state.publications}
+                  onChange={(val) => dispatch({ type: "SET_PUBLICATIONS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Awards">
-              <AwardsForm
-                value={state.awards}
-                onChange={(val) => dispatch({ type: "SET_AWARDS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["awards"] = el }}>
+              <CVFormSection title="Awards">
+                <AwardsForm
+                  value={state.awards}
+                  onChange={(val) => dispatch({ type: "SET_AWARDS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Volunteer Work">
-              <VolunteerForm
-                value={state.volunteerWork}
-                onChange={(val) => dispatch({ type: "SET_VOLUNTEER", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["volunteerWork"] = el }}>
+              <CVFormSection title="Volunteer Work">
+                <VolunteerForm
+                  value={state.volunteerWork}
+                  onChange={(val) => dispatch({ type: "SET_VOLUNTEER", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="References">
-              <ReferencesForm
-                value={state.references}
-                onChange={(val) => dispatch({ type: "SET_REFERENCES", payload: val })}
-                show={state.showReferences}
-                onToggle={() => dispatch({ type: "TOGGLE_REFERENCES" })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["references"] = el }}>
+              <CVFormSection title="References">
+                <ReferencesForm
+                  value={state.references}
+                  onChange={(val) => dispatch({ type: "SET_REFERENCES", payload: val })}
+                  show={state.showReferences}
+                  onToggle={() => dispatch({ type: "TOGGLE_REFERENCES" })}
+                />
+              </CVFormSection>
+            </div>
 
-            <CVFormSection title="Custom Sections">
-              <CustomSectionForm
-                value={state.customSections}
-                onChange={(val) => dispatch({ type: "SET_CUSTOM_SECTIONS", payload: val })}
-              />
-            </CVFormSection>
+            <div ref={(el) => { sectionRefs.current["customSections"] = el }}>
+              <CVFormSection title="Custom Sections">
+                <CustomSectionForm
+                  value={state.customSections}
+                  onChange={(val) => dispatch({ type: "SET_CUSTOM_SECTIONS", payload: val })}
+                />
+              </CVFormSection>
+            </div>
 
             <CVFormSection title="Section Order">
               <SectionReorder

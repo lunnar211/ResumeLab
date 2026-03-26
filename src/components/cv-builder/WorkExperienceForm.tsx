@@ -134,6 +134,7 @@ export function WorkExperienceForm({ value, onChange }: Props) {
                   rows={2}
                   placeholder="Brief role description..."
                 />
+                <p className="text-[11px] text-muted-foreground text-right">{exp.description.length} chars</p>
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <div className="flex items-center justify-between">
