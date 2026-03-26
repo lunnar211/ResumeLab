@@ -18,6 +18,7 @@ interface SpeechRecognitionResult {
 }
 interface SpeechRecognitionResultItem {
   [index: number]: SpeechRecognitionResult
+  isFinal: boolean
 }
 interface SpeechRecognitionEvent extends Event {
   results: { [index: number]: SpeechRecognitionResultItem; length: number }
