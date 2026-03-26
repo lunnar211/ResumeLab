@@ -24,10 +24,11 @@ export async function signUpWithEmail(email: string, password: string, fullName:
 
 export async function signInWithGoogle(): Promise<{ url: string } | { error: string }> {
   const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: process.env.NEXT_PUBLIC_SITE_URL + "/auth/callback",
+      redirectTo: `${appUrl}/auth/callback`,
       queryParams: { access_type: "offline", prompt: "consent" },
     },
   })
@@ -38,9 +39,10 @@ export async function signInWithGoogle(): Promise<{ url: string } | { error: str
 
 export async function signInWithMagicLink(email: string): Promise<ActionResult> {
   const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: process.env.NEXT_PUBLIC_SITE_URL + "/auth/callback" },
+    options: { emailRedirectTo: `${appUrl}/auth/callback` },
   })
   if (error) return { error: error.message }
   return { success: true }
@@ -48,8 +50,9 @@ export async function signInWithMagicLink(email: string): Promise<ActionResult> 
 
 export async function resetPassword(email: string): Promise<ActionResult> {
   const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ""
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: process.env.NEXT_PUBLIC_SITE_URL + "/reset-password",
+    redirectTo: `${appUrl}/reset-password`,
   })
   if (error) return { error: error.message }
   return { success: true }
