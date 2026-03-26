@@ -13,10 +13,37 @@ interface VoiceAssistantProps {
 
 type State = "idle" | "listening" | "processing" | "confirming" | "error"
 
+interface SpeechRecognitionResult {
+  transcript: string
+}
+interface SpeechRecognitionResultItem {
+  [index: number]: SpeechRecognitionResult
+}
+interface SpeechRecognitionEvent extends Event {
+  results: { [index: number]: SpeechRecognitionResultItem; length: number }
+  resultIndex: number
+}
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+}
+interface SpeechRecognitionInstance {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  continuous: boolean
+  start: () => void
+  stop: () => void
+  onstart: (() => void) | null
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onend: (() => void) | null
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance
+
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: SpeechRecognitionCtor
+    webkitSpeechRecognition: SpeechRecognitionCtor
   }
 }
 
@@ -25,7 +52,7 @@ export function VoiceAssistant({ section, onFieldsFilled, className }: VoiceAssi
   const [transcript, setTranscript] = useState("")
   const [pendingFields, setPendingFields] = useState<Record<string, unknown> | null>(null)
   const [errorMsg, setErrorMsg] = useState("")
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
   const isSupported =
     typeof window !== "undefined" &&
