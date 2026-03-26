@@ -1,3 +1,23 @@
+# ResumeLab
+
+AI-powered resume builder using Next.js and Groq API.
+
+## Tech Stack
+
+- **Framework**: Next.js
+- **AI**: Groq API (Llama 3.3 70B)
+- **Database**: Supabase
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `GROQ_API_KEY` | Your Groq API key (free at console.groq.com) |
+
+Copy `.env.local.example` to `.env.local` and fill in the values.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
