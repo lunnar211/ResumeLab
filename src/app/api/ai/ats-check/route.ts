@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGroq, GROQ_MODEL } from "@/lib/groq";
+import { askAI } from "@/lib/openrouter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,12 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "prompt is required" }, { status: 400 });
     }
 
-    const completion = await getGroq().chat.completions.create({
-      model: GROQ_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 800,
-    });
-    const result = completion.choices[0]?.message?.content ?? "";
+    const result = await askAI(prompt, 600);
 
     return NextResponse.json({ result });
   } catch (error) {
