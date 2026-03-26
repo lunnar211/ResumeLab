@@ -6,6 +6,7 @@ import type { PersonalInfo } from "@/types/cv"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { VoiceAssistant } from "@/components/VoiceAssistant"
 
 interface Props {
   value: PersonalInfo
@@ -13,12 +14,31 @@ interface Props {
 }
 
 export function PersonalInfoForm({ value, onChange }: Props) {
-  const { register, watch } = useForm<PersonalInfo>({ defaultValues: value })
+  const { register, watch, setValue } = useForm<PersonalInfo>({ defaultValues: value })
 
   useEffect(() => {
     const sub = watch((data) => onChange(data as PersonalInfo))
     return () => sub.unsubscribe()
   }, [watch, onChange])
+
+  const handleVoiceFill = (fields: Record<string, unknown>) => {
+    const mapping: Record<string, keyof PersonalInfo> = {
+      fullName: "fullName",
+      email: "email",
+      phone: "phone",
+      location: "location",
+      website: "website",
+      linkedin: "linkedin",
+      github: "github",
+      jobTitle: "professionalTitle",
+    }
+    for (const [key, val] of Object.entries(fields)) {
+      const formKey = mapping[key] ?? (key as keyof PersonalInfo)
+      if (val !== null && val !== undefined && val !== "") {
+        setValue(formKey, val as string, { shouldDirty: true })
+      }
+    }
+  }
 
   const fields: { name: keyof PersonalInfo; label: string; type?: string; placeholder?: string; textarea?: boolean }[] = [
     { name: "fullName", label: "Full Name", placeholder: "John Doe" },
@@ -34,6 +54,7 @@ export function PersonalInfoForm({ value, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
+      <VoiceAssistant section="personalInfo" onFieldsFilled={handleVoiceFill} />
       <div className="grid gap-4 sm:grid-cols-2">
         {fields.map((f) => (
           <div key={f.name} className="flex flex-col gap-1.5">

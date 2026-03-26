@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Trash, ChevronDown, ChevronUp } from "lucide-react"
+import { Plus, Trash, ChevronDown, ChevronUp, Sparkles, Loader2 } from "lucide-react"
 import type { WorkExperience } from "@/types/cv"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,6 +29,7 @@ interface Props {
 
 export function WorkExperienceForm({ value, onChange }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(value[0]?.id ?? null)
+  const [improvingId, setImprovingId] = useState<string | null>(null)
 
   const update = (id: string, data: Partial<WorkExperience>) => {
     onChange(value.map((e) => (e.id === id ? { ...e, ...data } : e)))
@@ -47,6 +48,31 @@ export function WorkExperienceForm({ value, onChange }: Props) {
   const updateBullets = (id: string, bulletsText: string) => {
     const bullets = bulletsText.split("\n").filter((b) => b.trim())
     update(id, { bullets })
+  }
+
+  const improveBullets = async (exp: WorkExperience) => {
+    if (!exp.bullets.length && !exp.description) return
+    setImprovingId(exp.id)
+    try {
+      const context = exp.bullets.length
+        ? exp.bullets.join("\n")
+        : exp.description
+      const prompt = `Rewrite and improve these resume bullet points for a ${exp.role} at ${exp.company}. Make them action-oriented, quantified where possible, and ATS-friendly. Return only the improved bullet points, one per line, no numbering or dashes:\n\n${context}`
+      const res = await fetch("/api/ai/improve-bullet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
+      const data = await res.json()
+      if (data.result) {
+        const improved = (data.result as string).split("\n").filter((b: string) => b.trim())
+        update(exp.id, { bullets: improved })
+      }
+    } catch {
+      // silently fail; user can retry
+    } finally {
+      setImprovingId(null)
+    }
   }
 
   return (
@@ -107,7 +133,24 @@ export function WorkExperienceForm({ value, onChange }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <Label>Bullet Points (one per line)</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Bullet Points (one per line)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 gap-1 px-2 text-[11px]"
+                    disabled={improvingId === exp.id || (!exp.bullets.length && !exp.description)}
+                    onClick={() => improveBullets(exp)}
+                  >
+                    {improvingId === exp.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    AI Improve
+                  </Button>
+                </div>
                 <Textarea
                   value={exp.bullets.join("\n")}
                   onChange={(e) => updateBullets(exp.id, e.target.value)}
