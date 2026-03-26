@@ -1,18 +1,18 @@
 # ResumeLab
 
-AI-powered resume builder using Next.js and OpenRouter API.
+AI-powered resume builder using Next.js and Groq API.
 
 ## Tech Stack
 
 - **Framework**: Next.js
-- **AI**: OpenRouter API (Llama 3.3 70B)
+- **AI**: Groq API (Llama 3.3 70B) - Free
 - **Database**: Supabase
 
 ## Environment Variables
 
 | Variable | Description |
 |---|---|
-| `OPENROUTER_API_KEY` | Your OpenRouter API key (free at openrouter.ai) |
+| `GROQ_API_KEY` | Your Groq API key (free at console.groq.com) |
 
 Copy `.env.local.example` to `.env.local` and fill in the values.
 
