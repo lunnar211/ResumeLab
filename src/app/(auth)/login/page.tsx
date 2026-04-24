@@ -1,16 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signInWithEmail, signInWithGoogle, signInWithMagicLink } from "../actions"
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  auth_callback_error: "Sign-in failed. Please try again.",
+  access_denied: "Access was denied. Please try again.",
+  server_error: "A server error occurred. Please try again.",
+}
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,9 +25,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
-  const [serverError, setServerError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get("error")
+  const urlMessage = searchParams.get("message")
+
+  const [serverError, setServerError] = useState<string | null>(
+    urlError ? (AUTH_ERROR_MESSAGES[urlError] ?? "Sign-in failed. Please try again.") : null
+  )
   const [magicLinkSent, setMagicLinkSent] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
@@ -77,6 +89,12 @@ export default function LoginPage() {
       {serverError && (
         <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {serverError}
+        </div>
+      )}
+
+      {!serverError && urlMessage && (
+        <div className="rounded-md bg-blue-500/10 px-4 py-3 text-sm text-blue-700 dark:text-blue-400">
+          {urlMessage}
         </div>
       )}
 
@@ -153,5 +171,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="h-8 w-full animate-pulse rounded bg-muted" />}>
+      <LoginForm />
+    </Suspense>
   )
 }
