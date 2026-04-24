@@ -15,8 +15,32 @@ const navItems = [
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL
-  if (!user || !adminEmail || user.email !== adminEmail) {
+  if (!adminEmail) {
+    // ADMIN_EMAIL env var is not configured — show a clear setup error instead
+    // of silently redirecting, so the operator knows what to fix.
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="rounded-xl border bg-card p-8 shadow-sm max-w-md text-center">
+          <h1 className="text-xl font-bold mb-2">Admin not configured</h1>
+          <p className="text-sm text-muted-foreground mb-4">
+            Set the <code className="rounded bg-muted px-1 py-0.5 text-xs">ADMIN_EMAIL</code> environment variable
+            in your Render dashboard to enable admin access.
+          </p>
+          <Link href="/dashboard" className="text-sm font-medium text-primary hover:underline">
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (user.email !== adminEmail) {
     redirect("/dashboard")
   }
 

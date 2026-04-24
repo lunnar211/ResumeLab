@@ -222,6 +222,13 @@ export function CVBuilderClient({ cvId, initialTitle, initialContent, initialTem
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
+          <Link
+            href="/templates"
+            className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Templates
+          </Link>
           <Input
             value={title}
             onChange={(e) => updateTitle(e.target.value)}
