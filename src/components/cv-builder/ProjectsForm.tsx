@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 
 function newEntry(): Project {
   return { id: crypto.randomUUID(), name: "", description: "", technologies: [], url: "", github: "", startDate: "", endDate: "" }
@@ -40,7 +40,7 @@ export function ProjectsForm({ value, onChange }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === proj.id ? null : proj.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === proj.id ? null : proj.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === proj.id ? null : proj.id))}
           >
             <span className={cn("font-medium", !proj.name && "text-muted-foreground")}>
               {proj.name || "New Project"}

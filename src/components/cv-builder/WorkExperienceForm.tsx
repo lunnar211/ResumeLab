@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 function newEntry(): WorkExperience {
@@ -87,7 +87,7 @@ export function WorkExperienceForm({ value, onChange }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === exp.id ? null : exp.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === exp.id ? null : exp.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === exp.id ? null : exp.id))}
           >
             <span className={cn("font-medium", !exp.role && !exp.company && "text-muted-foreground")}>
               {exp.role || exp.company || "New Experience"}

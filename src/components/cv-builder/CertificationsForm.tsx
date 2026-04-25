@@ -6,7 +6,7 @@ import type { Certification } from "@/types/cv"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 
 function newEntry(): Certification {
   return { id: crypto.randomUUID(), name: "", issuer: "", date: "", url: "" }
@@ -39,7 +39,7 @@ export function CertificationsForm({ value, onChange }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === cert.id ? null : cert.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === cert.id ? null : cert.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === cert.id ? null : cert.id))}
           >
             <span className={cn("font-medium", !cert.name && "text-muted-foreground")}>
               {cert.name || "New Certification"}

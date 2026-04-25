@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 
 function newEntry(): Education {
   return {
@@ -53,7 +53,7 @@ export function EducationForm({ value, onChange }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === edu.id ? null : edu.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === edu.id ? null : edu.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === edu.id ? null : edu.id))}
           >
             <span className={cn("font-medium", !edu.institution && !edu.degree && "text-muted-foreground")}>
               {edu.degree || edu.institution || "New Education"}

@@ -6,7 +6,7 @@ import type { Reference } from "@/types/cv"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 
 function newEntry(): Reference {
   return { id: crypto.randomUUID(), name: "", title: "", company: "", email: "", phone: "", relationship: "" }
@@ -46,7 +46,7 @@ export function ReferencesForm({ value, onChange, show, onToggle }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === ref.id ? null : ref.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === ref.id ? null : ref.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === ref.id ? null : ref.id))}
           >
             <span className={cn("font-medium", !ref.name && "text-muted-foreground")}>
               {ref.name || "New Reference"}

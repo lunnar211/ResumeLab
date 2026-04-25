@@ -1,4 +1,5 @@
-import { cn, generateSlug, formatDate, truncate } from "@/lib/utils"
+import { cn, generateSlug, formatDate, truncate, handleToggleKeyDown } from "@/lib/utils"
+import type { KeyboardEvent } from "react"
 
 describe("cn", () => {
   it("returns empty string for no arguments", () => {
@@ -72,6 +73,33 @@ describe("formatDate", () => {
   it("handles year-month only strings", () => {
     const result = formatDate("2023-06")
     expect(result).toMatch(/Jun 2023/)
+  })
+})
+
+describe("handleToggleKeyDown", () => {
+  const makeEvent = (key: string) =>
+    ({ key, preventDefault: jest.fn() } as unknown as KeyboardEvent<Element>)
+
+  it("calls onToggle when Enter is pressed", () => {
+    const onToggle = jest.fn()
+    const e = makeEvent("Enter")
+    handleToggleKeyDown(e, onToggle)
+    expect(onToggle).toHaveBeenCalledTimes(1)
+    expect(e.preventDefault).toHaveBeenCalled()
+  })
+
+  it("calls onToggle when Space is pressed", () => {
+    const onToggle = jest.fn()
+    const e = makeEvent(" ")
+    handleToggleKeyDown(e, onToggle)
+    expect(onToggle).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not call onToggle for other keys", () => {
+    const onToggle = jest.fn()
+    handleToggleKeyDown(makeEvent("Tab"), onToggle)
+    handleToggleKeyDown(makeEvent("Escape"), onToggle)
+    expect(onToggle).not.toHaveBeenCalled()
   })
 })
 

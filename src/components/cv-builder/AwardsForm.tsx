@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, handleToggleKeyDown } from "@/lib/utils"
 
 function newEntry(): Award {
   return { id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "" }
@@ -40,7 +40,7 @@ export function AwardsForm({ value, onChange }: Props) {
             tabIndex={0}
             className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === award.id ? null : award.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === award.id ? null : award.id) } }}
+            onKeyDown={(e) => handleToggleKeyDown(e, () => setExpandedId(expandedId === award.id ? null : award.id))}
           >
             <span className={cn("font-medium", !award.title && "text-muted-foreground")}>
               {award.title || "New Award"}
