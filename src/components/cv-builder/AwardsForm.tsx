@@ -35,10 +35,12 @@ export function AwardsForm({ value, onChange }: Props) {
     <div className="flex flex-col gap-3">
       {value.map((award) => (
         <div key={award.id} className="rounded-md border">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-sm"
+          <div
+            role="button"
+            tabIndex={0}
+            className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === award.id ? null : award.id)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === award.id ? null : award.id) } }}
           >
             <span className={cn("font-medium", !award.title && "text-muted-foreground")}>
               {award.title || "New Award"}
@@ -49,7 +51,7 @@ export function AwardsForm({ value, onChange }: Props) {
               </Button>
               {expandedId === award.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
-          </button>
+          </div>
           {expandedId === award.id && (
             <div className="grid gap-3 border-t p-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5 sm:col-span-2">

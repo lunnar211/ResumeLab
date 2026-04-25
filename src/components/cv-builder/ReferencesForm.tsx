@@ -41,10 +41,12 @@ export function ReferencesForm({ value, onChange, show, onToggle }: Props) {
 
       {value.map((ref) => (
         <div key={ref.id} className="rounded-md border">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-sm"
+          <div
+            role="button"
+            tabIndex={0}
+            className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === ref.id ? null : ref.id)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === ref.id ? null : ref.id) } }}
           >
             <span className={cn("font-medium", !ref.name && "text-muted-foreground")}>
               {ref.name || "New Reference"}
@@ -55,7 +57,7 @@ export function ReferencesForm({ value, onChange, show, onToggle }: Props) {
               </Button>
               {expandedId === ref.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
-          </button>
+          </div>
           {expandedId === ref.id && (
             <div className="grid gap-3 border-t p-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">

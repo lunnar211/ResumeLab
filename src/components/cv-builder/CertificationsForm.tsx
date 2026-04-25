@@ -34,10 +34,12 @@ export function CertificationsForm({ value, onChange }: Props) {
     <div className="flex flex-col gap-3">
       {value.map((cert) => (
         <div key={cert.id} className="rounded-md border">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-sm"
+          <div
+            role="button"
+            tabIndex={0}
+            className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm"
             onClick={() => setExpandedId(expandedId === cert.id ? null : cert.id)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(expandedId === cert.id ? null : cert.id) } }}
           >
             <span className={cn("font-medium", !cert.name && "text-muted-foreground")}>
               {cert.name || "New Certification"}
@@ -48,7 +50,7 @@ export function CertificationsForm({ value, onChange }: Props) {
               </Button>
               {expandedId === cert.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
-          </button>
+          </div>
           {expandedId === cert.id && (
             <div className="grid gap-3 border-t p-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5 sm:col-span-2">
