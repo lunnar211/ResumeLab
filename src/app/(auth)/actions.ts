@@ -13,10 +13,17 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
 export async function signUpWithEmail(email: string, password: string, fullName: string): Promise<ActionResult> {
   const supabase = await createClient()
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000"
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      emailRedirectTo: `${appUrl}/auth/callback`,
+      data: { full_name: fullName },
+    },
   })
   if (error) return { error: error.message }
   return { success: true }

@@ -26,11 +26,19 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const protectedRoutes = ['/dashboard', '/builder', '/settings']
+  const guestOnlyRoutes = ['/login', '/signup', '/forgot-password']
   const isProtected = protectedRoutes.some((r) => request.nextUrl.pathname.startsWith(r))
+  const isGuestOnly = guestOnlyRoutes.some((r) => request.nextUrl.pathname.startsWith(r))
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isGuestOnly) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
