@@ -1,10 +1,11 @@
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
-  const next = searchParams.get("next") ?? "/dashboard"
+  const nextPath = searchParams.get("next") ?? "/dashboard"
 
   // Use the configured app URL so that the redirect always uses the correct
   // scheme and host, even when running behind a reverse-proxy on Render where
@@ -14,13 +15,34 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SITE_URL ||
     new URL(request.url).origin
 
-  if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${appUrl}${next}`)
-    }
+  if (!code) {
+    return NextResponse.redirect(`${appUrl}/login?error=missing_auth_code`)
   }
 
-  return NextResponse.redirect(`${appUrl}/login?error=auth_callback_error`)
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error) {
+    const errorMessage = encodeURIComponent(error.message)
+    return NextResponse.redirect(`${appUrl}/login?error=auth_callback_error&message=${errorMessage}`)
+  }
+
+  return NextResponse.redirect(`${appUrl}${nextPath}`)
 }
