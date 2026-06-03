@@ -1,7 +1,17 @@
 import Groq from "groq-sdk";
 
-export const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "",
-});
+let client: Groq | null = null;
 
 export const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+export function getGroq(): Groq {
+  if (!client) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      throw new Error("GROQ_API_KEY not set");
+    }
+    client = new Groq({ apiKey });
+  }
+
+  return client;
+}

@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { groq, GROQ_MODEL } from "@/lib/groq";
+import { getGroq } from "@/lib/groq";
+
+const MODEL = "llama-3.3-70b-versatile";
+
+function isRateLimitError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const withStatus = error as { status?: number; response?: { status?: number } };
+  return withStatus.status === 429 || withStatus.response?.status === 429;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
 
 const sectionPrompts: Record<string, string> = {
   personalInfo: `Extract personal information from this text and return a JSON object with these fields (use null for missing fields):
@@ -40,12 +52,13 @@ const sectionPrompts: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const groq = getGroq();
     const { transcript, section } = await request.json();
 
-    if (!transcript || typeof transcript !== "string") {
+    if (typeof transcript !== "string" || !transcript.trim()) {
       return NextResponse.json({ error: "transcript is required" }, { status: 400 });
     }
-    if (!section || typeof section !== "string") {
+    if (typeof section !== "string" || !section.trim()) {
       return NextResponse.json({ error: "section is required" }, { status: 400 });
     }
 
@@ -54,7 +67,7 @@ export async function POST(request: NextRequest) {
       `Extract relevant resume information from this text and return it as a JSON object with appropriate fields.`;
 
     const completion = await groq.chat.completions.create({
-      model: GROQ_MODEL,
+      model: MODEL,
       messages: [
         {
           role: "system",
@@ -102,6 +115,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("voice-parse error:", error);
-    return NextResponse.json({ error: "Failed to parse voice input" }, { status: 500 });
+    if (isRateLimitError(error)) {
+      return NextResponse.json({ error: "AI busy, try again" }, { status: 429 });
+    }
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
